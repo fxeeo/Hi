@@ -11,6 +11,7 @@ import random
 import subprocess
 import sys
 import importlib
+import shutil
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -58,6 +59,14 @@ PROXIES = {
 
 # --- Functions ---
 
+def find_chrome_executable():
+    """Finds the Chrome executable on the system."""
+    for executable in ["google-chrome", "chrome", "chromium-browser", "chromium"]:
+        path = shutil.which(executable)
+        if path:
+            return path
+    return None
+
 def simulate_traffic(url):
     """
     Simulates organic traffic to a given URL using Selenium and undetected_chromedriver.
@@ -87,11 +96,11 @@ def simulate_traffic(url):
     else:
         options.add_argument(f'--proxy-server={proxy}')
 
+    browser_executable_path = find_chrome_executable()
+
     try:
         # Initialize WebDriver
-        # If Chrome is not in a standard location, you may need to specify the path:
-        # driver = uc.Chrome(options=options, browser_executable_path='/path/to/your/chrome')
-        with uc.Chrome(options=options) as driver:
+        with uc.Chrome(options=options, browser_executable_path=browser_executable_path) as driver:
             driver.get(url)
 
             # Wait for page to load
@@ -135,12 +144,20 @@ def display_banner():
     console.print("[bold magenta]Pydroid 3 Note:[/bold magenta] Ensure you have a compatible Chrome/Chromium browser installed and accessible for Selenium to function correctly.")
     console.print("-" * 60)
 
+def get_user_input():
+    """Gets the target URL from the user."""
+    url = Prompt.ask("[bold cyan]Enter website URL[/bold cyan]")
+    return url
+
 def main():
     """Main function to run the script."""
     install_dependencies()
     display_banner()
 
-    target_url = "https://promotect.xo.je/"
+    target_url = get_user_input()
+
+    if not target_url.startswith("http"):
+        target_url = "https://" + target_url
 
     while True:
         console.print(f"\n[cyan]Adding organic traffic to[/cyan] [bold green]{target_url}[/bold green]...")
@@ -154,8 +171,10 @@ def main():
 
         # Wait for a random interval before the next run
         delay = random.randint(30, 90)
-        console.print(f"\n[yellow]Waiting for {delay} seconds before the next run...[/yellow]")
-        time.sleep(delay)
+        with console.status(f"[bold yellow]Waiting for {delay} seconds before the next run...", spinner="dots") as status:
+            for i in range(delay, 0, -1):
+                status.update(f"[bold yellow]Waiting for {i} seconds before the next run...[/bold yellow]")
+                time.sleep(1)
 
 if __name__ == "__main__":
     main()
