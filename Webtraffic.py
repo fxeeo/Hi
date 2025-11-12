@@ -8,6 +8,9 @@
 
 import time
 import random
+import subprocess
+import sys
+import importlib
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -19,6 +22,23 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # Initialize rich console
 console = Console()
+
+# --- Dependency Management ---
+
+def install_dependencies():
+    """Checks for and installs required modules if they are missing."""
+    required_modules = ["rich", "selenium", "undetected_chromedriver", "setuptools"]
+    for module in required_modules:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            console.print(f"[yellow]Module '{module}' not found. Installing...[/yellow]")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", module])
+                console.print(f"[green]Module '{module}' installed successfully.[/green]")
+            except subprocess.CalledProcessError:
+                console.print(f"[red]Failed to install '{module}'. Please install it manually.[/red]")
+                sys.exit(1)
 
 # --- Configuration ---
 
@@ -115,28 +135,27 @@ def display_banner():
     console.print("[bold magenta]Pydroid 3 Note:[/bold magenta] Ensure you have a compatible Chrome/Chromium browser installed and accessible for Selenium to function correctly.")
     console.print("-" * 60)
 
-def get_user_input():
-    """Gets the target URL from the user."""
-    url = Prompt.ask("[bold cyan]Enter website URL[/bold cyan]")
-    return url
-
 def main():
     """Main function to run the script."""
+    install_dependencies()
     display_banner()
 
-    target_url = get_user_input()
+    target_url = "https://promotect.xo.je/"
 
-    if not target_url.startswith("http"):
-        target_url = "https://" + target_url
+    while True:
+        console.print(f"\n[cyan]Adding organic traffic to[/cyan] [bold green]{target_url}[/bold green]...")
 
-    console.print(f"\n[cyan]Adding organic traffic to[/cyan] [bold green]{target_url}[/bold green]...")
+        success = simulate_traffic(target_url)
 
-    success = simulate_traffic(target_url)
+        if success:
+            console.print("\n[bold green]Successfully added organic traffic![/bold green]")
+        else:
+            console.print("\n[bold red]Failed to add organic traffic.[/bold red]")
 
-    if success:
-        console.print("\n[bold green]✅ Successfully added organic traffic![/bold green]")
-    else:
-        console.print("\n[bold red]❌ Failed to add organic traffic.[/bold red]")
+        # Wait for a random interval before the next run
+        delay = random.randint(30, 90)
+        console.print(f"\n[yellow]Waiting for {delay} seconds before the next run...[/yellow]")
+        time.sleep(delay)
 
 if __name__ == "__main__":
     main()
