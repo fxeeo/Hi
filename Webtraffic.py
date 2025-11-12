@@ -15,11 +15,10 @@ import shutil
 from rich.console import Console
 from rich.prompt import Prompt
 
-# Selenium and undetected-chromedriver
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# HTTP requests and HTML parsing
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
 # Initialize rich console
 console = Console()
@@ -28,7 +27,7 @@ console = Console()
 
 def install_dependencies():
     """Checks for and installs required modules if they are missing."""
-    required_modules = ["rich", "selenium", "undetected_chromedriver", "setuptools"]
+    required_modules = ["rich", "requests", "beautifulsoup4"]
     for module in required_modules:
         try:
             importlib.import_module(module)
@@ -59,101 +58,77 @@ PROXIES = {
 
 # --- Functions ---
 
-def install_browser_if_needed():
-    """Attempts to install Chromium if no browser is found."""
-    console.print("[yellow]Attempting to install Chromium browser...[/yellow]")
-    try:
-        # First, try to update package list
-        subprocess.run(["sudo", "apt-get", "update"], check=True)
-        # Then, install chromium-browser
-        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-browser"], check=True)
-        console.print("[green]Chromium browser installed successfully.[/green]")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        console.print(f"[red]Failed to auto-install Chromium: {e}[/red]")
-        return False
-
-def find_chrome_executable():
-    """Finds the Chrome executable on the system."""
-    for executable in ["google-chrome", "chrome", "chromium-browser", "chromium"]:
-        path = shutil.which(executable)
-        if path:
-            return path
-    return None
-
 def simulate_traffic(url):
     """
-    Simulates organic traffic to a given URL using Selenium and undetected_chromedriver.
+    Simulates organic traffic to a given URL using requests and BeautifulSoup.
     """
-    # -- Setup Chrome options --
-    options = uc.ChromeOptions()
-
-    # Rotate User-Agent
-    user_agent = random.choice(USER_AGENTS)
-    options.add_argument(f'--user-agent={user_agent}')
-
-    # Set a realistic viewport size
-    options.add_argument('--window-size=1920,1080')
-
-    # Add realistic headers to mimic a real browser
-    options.add_argument('--accept-language=en-US,en;q=0.9')
-    options.add_argument('--sec-fetch-site=none')
-    options.add_argument('--sec-fetch-mode=navigate')
-    options.add_argument('--sec-fetch-user=?1')
-    options.add_argument('--sec-fetch-dest=document')
-
-    # Proxy setup (placeholder)
-    proxy_location = random.choice(list(PROXIES.keys()))
-    proxy = PROXIES[proxy_location]
-    if "YOUR_" in proxy:
-        console.print(f"[yellow]Warning: Using placeholder proxy for {proxy_location}. Please update PROXIES in the script.[/yellow]")
-    else:
-        options.add_argument(f'--proxy-server={proxy}')
-
-    browser_executable_path = find_chrome_executable()
-    if not browser_executable_path:
-        console.print("[yellow]No Chrome browser found. Attempting to install Chromium...[/yellow]")
-        if install_browser_if_needed():
-            browser_executable_path = find_chrome_executable() # Check again after installation
-
     try:
-        # Initialize WebDriver
-        with uc.Chrome(options=options, browser_executable_path=browser_executable_path) as driver:
-            driver.get(url)
+        # -- Setup Session --
+        session = requests.Session()
 
-            # Wait for page to load
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        # Rotate User-Agent
+        user_agent = random.choice(USER_AGENTS)
+        session.headers.update({'User-Agent': user_agent})
 
-            # Simulate human-like behavior
-            time.sleep(random.uniform(3, 7))  # Initial delay
+        # Add realistic headers
+        session.headers.update({
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Connection': 'keep-alive'
+        })
 
-            # Scroll down the page
-            scroll_height = driver.execute_script("return document.body.scrollHeight")
-            for i in range(0, scroll_height, random.randint(300, 600)):
-                driver.execute_script(f"window.scrollTo(0, {i});")
-                time.sleep(random.uniform(0.5, 1.5))
+        # Proxy setup (placeholder)
+        proxy_location = random.choice(list(PROXIES.keys()))
+        proxy = PROXIES[proxy_location]
+        if "YOUR_" in proxy:
+            console.print(f"[yellow]Warning: Using placeholder proxy for {proxy_location}. Please update PROXIES in the script.[/yellow]")
+        else:
+            session.proxies = {"http": proxy, "https": proxy}
 
-            time.sleep(random.uniform(2, 5)) # Final delay before closing
+        # -- Make Initial Request --
+        console.print(f"[cyan]Visiting:[/cyan] {url}")
+        response = session.get(url, timeout=15)
+        response.raise_for_status()
+
+        # Simulate reading the page
+        time.sleep(random.uniform(5, 10))
+
+        # -- Parse HTML and Find Internal Link --
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        internal_links = []
+        parsed_url = urlparse(url)
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            # Join relative URLs with the base URL
+            absolute_link = urljoin(url, href)
+            # Check if the link is on the same domain
+            if urlparse(absolute_link).netloc == parsed_url.netloc:
+                internal_links.append(absolute_link)
+
+        if internal_links:
+            # "Click" a random internal link
+            next_page = random.choice(internal_links)
+            console.print(f"[cyan]Navigating to:[/cyan] {next_page}")
+
+            time.sleep(random.uniform(2, 5)) # Delay before "clicking"
+
+            next_response = session.get(next_page, timeout=15)
+            next_response.raise_for_status()
+
+            # Simulate reading the second page
+            time.sleep(random.uniform(5, 10))
+        else:
+            console.print("[yellow]No internal links found to navigate to.[/yellow]")
 
         return True
 
-    except TypeError as e:
-        if "binary location must be a string" in str(e).lower():
-            console.print("[bold red]Error: Chrome browser not found, and auto-installation failed.[/bold red]")
-            console.print("\n[bold yellow]Why this happens:[/bold yellow] This script requires a web browser (like Chrome or Chromium) to be installed on your system to simulate traffic. It appears that no compatible browser could be found or installed automatically.")
-            console.print("\n[bold cyan]How to fix it:[/bold cyan]")
-            console.print("1. Open your terminal (outside of this script).")
-            console.print("2. Run one of the following commands based on your system:")
-            console.print("   - For Debian/Ubuntu: [bold]`sudo apt-get install -y chromium-browser`[/bold]")
-            console.print("   - For Fedora/CentOS: [bold]`sudo dnf install -y chromium`[/bold]")
-            console.print("   - For Arch Linux: [bold]`sudo pacman -S chromium`[/bold]")
-            console.print("3. After the installation is complete, run this script again.")
-            return False
-        else:
-            console.print(f"[bold red]An unexpected TypeError occurred: {e}[/bold red]")
-            return False
+    except requests.exceptions.RequestException as e:
+        console.print(f"[bold red]An error occurred during the web request: {e}[/bold red]")
+        return False
     except Exception as e:
-        console.print(f"[bold red]An error occurred: {e}[/bold red]")
+        console.print(f"[bold red]An unexpected error occurred: {e}[/bold red]")
         return False
 
 def display_banner():
@@ -165,8 +140,7 @@ def display_banner():
     console.print("[bold red]Disclaimer:[/bold red]", "This tool is for educational and testing purposes only.")
     console.print("The user is responsible for complying with the terms of service of any website they test.")
     console.print("The developer assumes no liability for any misuse of this tool.\n")
-    console.print("[bold magenta]Pydroid 3 Note:[/bold magenta] Ensure you have a compatible Chrome/Chromium browser installed and accessible for Selenium to function correctly.")
-    console.print("\n[bold]Important:[/bold] This script requires a local installation of Google Chrome or Chromium to function.")
+    console.print("[bold magenta]Pydroid 3 Note:[/bold magenta] This script is lightweight and should work well on Pydroid 3.")
     console.print("-" * 60)
 
 def get_user_input():
