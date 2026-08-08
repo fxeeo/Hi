@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Assam Flood PDP{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-container" style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Assam Flood Public Dashboard</h1>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home_page') }}">Home</a></li>
+                    <li><a href="{{ url_for('districts_page') }}">Districts</a></li>
+                    <li><a href="{{ url_for('relief_page') }}">Relief</a></li>
+                    <li><a href="{{ url_for('updates_page') }}">Updates</a></li>
+                    <li><a href="{{ url_for('donate_page') }}">Donate</a></li>
+                    <li><a href="{{ url_for('about_page') }}">About</a></li>
+                    {% if session.get('logged_in') %}
+                        <li><a href="{{ url_for('dashboard_page') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login_page') }}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="text-align:center; padding: 1rem; background: #e0e6ed; margin-top:2rem;">
+        <p>&copy; 2024 Assam Flood Relief Prototype Platform</p>
+    </footer>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

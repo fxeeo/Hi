@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Field Updates{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Chronological Field Updates</h2>
+    <div style="border-left: 2px solid #0056b3; margin-left: 1rem; padding-left: 1rem;">
+        {% for update in updates %}
+        <div style="margin-bottom: 1rem;">
+            <strong>{{ update.time }}</strong><br>
+            {{ update.message }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

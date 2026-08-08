@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Relief Operations{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Relief Operations</h2>
+    <ul>
+        <li>Active Camps: {{ relief.camps }}</li>
+        <li>Shelter Capacity: {{ relief.capacity }}</li>
+        <li>People Evacuated: {{ relief.evacuated }}</li>
+        <li>Supplies Dispatched: {{ relief.supplies_dispatched }} trucks</li>
+        <li>Food Packets: {{ relief.food_packets }}</li>
+        <li>Water Bottles: {{ relief.water_bottles }}</li>
+    </ul>
+</div>
+{% endblock %}

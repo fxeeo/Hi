@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Operational Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Admin Dashboard</h2>
+    <p>Operational Overview. Data is live.</p>
+
+    <h3>State Overview</h3>
+    <ul>
+        <li>Districts Affected: {{ state.districts_affected }}</li>
+        <li>Total People Affected: {{ state.people_affected }}</li>
+        <li>Relief Camps Active: {{ state.relief_camps }}</li>
+        <li>Evacuated Population: {{ state.evacuated }}</li>
+    </ul>
+
+    <h3>Response Progress</h3>
+    <ul>
+        <li>Shelter Capacity: {{ relief.capacity }}</li>
+        <li>Evacuation Progress: {{ relief.evacuated }} evacuated</li>
+        <li>Supply Movement: {{ relief.supplies_dispatched }} trucks dispatched, {{ relief.food_packets }} food packets, {{ relief.water_bottles }} water bottles</li>
+    </ul>
+
+    <h3>Priority District Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>District</th>
+                <th>Risk Level</th>
+                <th>Trend</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in districts %}
+            <tr>
+                <td>{{ d.name }}</td>
+                <td>{{ d.risk_level }}</td>
+                <td>{{ d.trend }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

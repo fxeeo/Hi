@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Districts - Assam Flood PDP{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>District Impact</h2>
+
+    <div style="margin-bottom: 1rem;">
+        <input type="text" id="district-search" placeholder="Search districts..." style="width: 100%; max-width: 400px;">
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>District</th>
+                <th>Risk Level</th>
+                <th>People Affected</th>
+                <th>Relief Camps</th>
+                <th>Trend</th>
+            </tr>
+        </thead>
+        <tbody id="districts-table-body">
+            {% for d in districts %}
+            <tr>
+                <td>{{ d.name }}</td>
+                <td>{{ d.risk_level }}</td>
+                <td>{{ d.people_affected }}</td>
+                <td>{{ d.relief_camps }}</td>
+                <td>{{ d.trend }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

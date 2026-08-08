@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Assam Flood PDP{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Current Situation</h2>
+    <p>Welcome to the Public Dashboard for Assam Flood Monitoring.</p>
+
+    <div style="display:flex; gap: 2rem; margin-top: 1rem;">
+        <div style="flex:1; background: #e0f2fe; padding: 1rem; border-radius: 8px;">
+            <h3>Districts Affected</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin:0;">{{ state.districts_affected }}</p>
+        </div>
+        <div style="flex:1; background: #fee2e2; padding: 1rem; border-radius: 8px;">
+            <h3>People Affected</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin:0;">{{ state.people_affected }}</p>
+        </div>
+        <div style="flex:1; background: #dcfce7; padding: 1rem; border-radius: 8px;">
+            <h3>Evacuated</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin:0;">{{ state.evacuated }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
